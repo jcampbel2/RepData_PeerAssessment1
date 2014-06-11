@@ -6,8 +6,8 @@ Reproducible Research - Peer Assessment 1
 ##Set environment for script
 
 This markdown document assumes that
-1. The base working folder is C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1
-2. The data is held in a sub-folder called .\data and is called activity.csv
+1.The base working folder is C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1
+2.The data is held in a sub-folder called .\data and is called activity.csv
 
 ```{r LibraryLoad}
 ##load Libs
@@ -50,7 +50,12 @@ stepmedian <- median(stepsbyday$totsteps)
 rowname <- c("Mean","Median")
 Values <- c(stepmean,stepmedian)
 xtab1 <-xtable(as.data.frame(x=Values, row.names=rowname ) )                        
+```
+
+##Summary Statistics for number of steps per day
+```{r results="asis"}
 print(xtab1, type="html")
+
 ```
 
 ------ END OF DOCUMENT -------

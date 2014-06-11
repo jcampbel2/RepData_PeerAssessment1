@@ -6,8 +6,8 @@ Reproducible Research - Peer Assessment 1
 ##Set environment for script
 
 This markdown document assumes that
-1. The base working folder is C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1
-2. The data is held in a sub-folder called .\data and is called activity.csv
+1.The base working folder is C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1
+2.The data is held in a sub-folder called .\data and is called activity.csv
 
 
 ```r
@@ -56,18 +56,21 @@ stepmedian <- median(stepsbyday$totsteps)
 rowname <- c("Mean","Median")
 Values <- c(stepmean,stepmedian)
 xtab1 <-xtable(as.data.frame(x=Values, row.names=rowname ) )                        
+```
+
+##Summary Statistics for number of steps per day
+
+```r
 print(xtab1, type="html")
 ```
 
-```
-## <!-- html table generated in R 3.0.3 by xtable 1.7-3 package -->
-## <!-- Wed Jun 11 16:39:52 2014 -->
-## <TABLE border=1>
-## <TR> <TH>  </TH> <TH> Values </TH>  </TR>
-##   <TR> <TD align="right"> Mean </TD> <TD align="right"> 10766.19 </TD> </TR>
-##   <TR> <TD align="right"> Median </TD> <TD align="right"> 10765.00 </TD> </TR>
-##    </TABLE>
-```
+<!-- html table generated in R 3.0.3 by xtable 1.7-3 package -->
+<!-- Wed Jun 11 17:07:50 2014 -->
+<TABLE border=1>
+<TR> <TH>  </TH> <TH> Values </TH>  </TR>
+  <TR> <TD align="right"> Mean </TD> <TD align="right"> 10766.19 </TD> </TR>
+  <TR> <TD align="right"> Median </TD> <TD align="right"> 10765.00 </TD> </TR>
+   </TABLE>
 
 ------ END OF DOCUMENT -------
 
