@@ -1,20 +1,194 @@
-# Reproducible Research: Peer Assessment 1
+Reproducible Research - Peer Assessment 1
+========================================================
+
+## Introduction
+
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement -- a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+###  Set environment for script and load data
+
+This markdown document assumes that
+- The base working folder is C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1
+- The data is held in a sub-folder called .\data and is called activity.csv
+
+The dataset used was originally downloaded from [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) [52K]
+
+The variables included in this dataset are:
+
+* **steps**: Number of steps taking in a 5-minute interval (missing
+    values are coded as `NA`)
+
+* **date**: The date on which the measurement was taken in YYYY-MM-DD
+    format
+
+* **interval**: Identifier for the 5-minute interval in which
+    measurement was taken
+
+```{r LibraryLoad}
+##load Libs
+library("plyr")
+library("knitr")
+library("ggplot2")
+library("xtable")
+##set workign directory
+setwd("C:/Users/james_000/DataScPrj/RepResearch/Assign1/RepData_PeerAssessment1")
+```
 
 
-## Loading and preprocessing the data
+Data was loaded usign standard csv read functions with the "date" column converted to date type.
+
+```{r DataLoad}
+actdata <- read.csv("./data/activity.csv")
+actdata$date <- as.POSIXct(actdata$date)
+```
+
+## Question 1 - What is mean total number of steps taken per day?
+
+By plotting the average number of steps in a given day (figure 1) we can see a string peak around 10,000 to 11,000 steps per day.  The shape appears broadly normally distributed around this peak with tails from 0 to 23,000.  The mean and median (figure 2) are very close to each other which implies distribution is likely to be symmetrical.
+
+*Figure 1 - Histogram of Total Number of Steps by Day*
+```{r plot1, fig.width=7, fig.height=6}
+##question 1
+## create summary data frame by date
+stepsbyday <- ddply(actdata[!is.na(actdata$steps),],.(date), 
+           summarize,totsteps=sum(steps))
+
+##histogram plot
+p1 <- ggplot(stepsbyday,aes(totsteps))
+p1 <- p1 +labs(title="Histogram of number of steps per day", y="Counts Days", x= "Total Steps in 1 day")
+p1 <- p1 + geom_histogram(binwidth=1000, fill="red", color="black")
+p1 <- p1 + scale_y_continuous(breaks=c(2,4,6,8,10,12))
+p1 <- p1 + scale_x_continuous(breaks=seq(0,26000,2000))
+p1
+```
+```{r meancalc}
+stepmean <- mean(stepsbyday$totsteps)
+stepmedian <- median(stepsbyday$totsteps)
+rowname <- c("Mean","Median")
+Values <- c(stepmean,stepmedian)
+xtab1 <-xtable(as.data.frame(x=Values, row.names=rowname ) )                        
+```
+
+*Figure 2 - Summary Statistics for number of steps per day*
+```{r prtSumstats, results="asis"}
+print(xtab1, type="html")
+```
+
+*Missing values have been ignored from above analysis.*
+
+## Question 2 - What is the average daily activity pattern?
+
+
+```{r maxsteps}
+avgdailyactivity <- ddply(actdata, .(interval), summarize, 
+           avgsteps=mean(steps, na.rm=TRUE))
+maxact <- avgdailyactivity[avgdailyactivity$avgsteps==max(avgdailyactivity$avgsteps),1]
+```
+
+
+If we then look at the average daily acivity in 5 minute intervals throughout the day we can see a strong peak between 8am and 9am with a daily average up to 200 steps per 5 minutes (figure 3).  The actual observed peak was at `r maxact`.  There was then a steadly level of around 100 steps per 5 minutes until early evening.  AS expected activity is very low between midnight and 6am.
+
+*Figure 3 - Average daily activity.*
+```{r plotavgDaily, fig.width=7, fig.height=6}
+p2 <- ggplot(avgdailyactivity,aes(interval,avgsteps))
+p2 <- p2 +labs(title="Average daily activity", y="Average number of steps", x= "Time")
+p2 <- p2 + geom_line(colour="blue")
+p2 <- p2 + scale_x_continuous(breaks=c(0,300,600,900,1200,1500,1800,2100,2355),
+                              labels=c("12am","3am","6am","9am","12pm","3pm","6pm","9pm","11:55pm"))
+p2
+```
 
 
 
-## What is mean total number of steps taken per day?
+## Question 3 - Imputing missing values
 
 
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
+```{r countNA}
+numNA <- length(actdata[is.na(actdata$steps),1])
+```
+The dataset contains `r numNA` rows where the number of steps is recorded as a NA.  As an method for imputing values for these rows I have decided to use the average number of steps for each 5 minute interval as an estimator for the missing values.  The actual table for this is shown in the document appendices.
 
 
+```{r ImputedData}
+actdata2 <- merge(x=actdata, y=avgdailyactivity, by="interval")
+adjSteps <- with(actdata2,ifelse(is.na(steps),avgsteps,steps))
+actdata2 <- cbind(actdata2,adjSteps)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+*Figure 4 - As figure 2 but with missing values imputed*
+```{r plotstepday, fig.width=7, fig.height=6}
+##question 1
+## create summary data frame by date
+stepsbyday2 <- ddply(actdata2,.(date), 
+           summarize,totsteps=sum(adjSteps))
+
+##histogram plot
+p3 <- ggplot(stepsbyday2,aes(totsteps, fill="red"))
+p3 <- p3 +labs(title="Histogram of Number of steps per day (missing values imputed)", y="Counts Days", x= "Total Steps in 1 day")
+p3 <- p3 + geom_histogram(binwidth=1000, fill="red", color="black")
+p3 <- p3 + scale_y_continuous(breaks=c(2,4,6,8,10,12))
+p3 <- p3 + scale_x_continuous(breaks=seq(0,26000,2000))
+p3
+
+```
+```{r calclmean2}
+stepmean2 <- mean(stepsbyday2$totsteps)
+stepmedian2 <- median(stepsbyday2$totsteps)
+rowname2 <- c("Mean","Mean (Imputed)","Median","Median (Imputed)")
+Values2 <- c(stepmean,stepmean2,stepmedian,stepmedian2)
+xtab3 <-xtable(as.data.frame(x=Values2, row.names=rowname2 ) )                        
+```
+
+### Summary Statistics for number of steps per day
+
+By adopting the approach of imputing missing values with the average number of steps for that time slice we have created an interesting impact where the mean and median are EXACTLY the same.  This is the result of us having entire days with missing values.  These have now been imputed with exactly an average day.  This logically becomes the median or middle value.
+
+*Figure 5 Summary statistics for average steps per day*
+```{r prtSumstats2, results="asis"}
+print(xtab3, type="html")
+
+```
+
+## Question 4. Are there differences in activity patterns between weekdays and weekends?
+
+
+```{r DOWanalysis}
+##calcuate if weekend based on abbreated day containing "S" and add as new column
+DOW <- as.factor(ifelse(grepl("S",weekdays(actdata2$date, abbreviate=TRUE)),"Weekend","Weekday"))
+actdata2 <- cbind(actdata2,DOW)
+
+avgDOWactivity <- ddply(actdata, .(DOW,interval), summarize, 
+           avgsteps=mean(steps, na.rm=TRUE))
+
+```
+
+If we split the datasets now into 2 subsets. One for weekdays (Monday to Friday) and the other for weekend days (Saturday and Sunday) and the plot the average number of steps in each 5 minute interval we can see the following pattern (figure 6).  This seems to show higher activity in the afternoon durng weekend days rather than weekdays. 
+
+
+*Figure 6 Weekdays v's Weekends*
+```{r plotDOW, fig.width=7, fig.height=6}
+p4 <- ggplot(avgDOWactivity,aes(interval,avgsteps))
+p4 <- p4 + geom_line()
+p4 <- p4 +labs(title="Average daily activity split between weekdays and weekends", y="Average number of steps", x= "Time")
+p4 <- p4 + geom_line(colour="blue")
+
+p4 <- p4 + scale_x_continuous(breaks=c(0,300,600,900,1200,1500,1800,2100,2355),
+                              labels=c("12am","3am","6am","9am","12pm","3pm","6pm","9pm","11:55pm"))
+p4 <- p4 + facet_grid( DOW ~ .)
+p4
+```
+
+## Appendices
+      
+*Table 1*
+
+```{r prtNA, results="asis"  }
+xtab2 <-xtable(avgdailyactivity )                        
+print(xtab2, type="html")
+```
+
+
+------ END OF DOCUMENT -------
+
