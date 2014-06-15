@@ -25,7 +25,6 @@ p1 <- p1 + geom_histogram(binwidth=1000)
 stepmean <- mean(stepsbyday$totsteps)
 stepmedian <- median(stepsbyday$totsteps)
 rowname <- c("Mean","Median")
-xtab1 <-xtable(as.data.frame(Values=c(stepmean,stepmedian), 
-                             x=Values, row.names=rowname, 
-                             col.names="Values") )
+Values <- c(stepmean,stepmedian)
+xtab1 <-xtable(as.data.frame(x=Values, row.names=rowname ) )  
 print(xtab1, type="html")
